@@ -25,7 +25,7 @@ class Hyperkeys {
     return createSigner(keyPair)
   }
 
-  sub (name) {
+  push (name) {
     const tweak = tweakKeyPair(toBuffer(name))
     if (this.tweak) add(tweak, this.tweak, tweak)
     return new Hyperkeys(this.root, tweak)
