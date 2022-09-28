@@ -1,0 +1,20 @@
+{
+  "name": "hyperkeys",
+  "version": "0.0.0",
+  "description": "Keychain that derives deterministic keypairs",
+  "main": "index.js",
+  "dependencies": {
+    "b4a": "^1.6.0",
+    "sodium-native": "^3.4.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/holepunchto/hyperkeys.git"
+  },
+  "author": "Mathias Buus (@mafintosh)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/holepunchto/hyperkeys/issues"
+  },
+  "homepage": "https://github.com/holepunchto/hyperkeys"
+}
