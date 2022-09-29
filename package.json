@@ -1,6 +1,6 @@
 {
   "name": "hyperkeys",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Keychain that derives deterministic keypairs",
   "main": "index.js",
   "dependencies": {
