@@ -1,34 +1,61 @@
 const sodium = require('sodium-native')
 const b4a = require('b4a')
 
-class Hyperkeys {
-  constructor (keyPair = Hyperkeys.keyPair(), tweak = null) {
-    this.root = toScalarKeyPair(keyPair)
+const EMPTY = b4a.alloc(32)
+
+class Keychain {
+  constructor (home = Keychain.keyPair(), base = null, tweak = null) {
+    this.home = toScalarKeyPair(fromKeyPair(home))
+    this.base = base || this.home
     this.tweak = tweak
-    this.chain = tweak
-      ? add(tweak, this.root, allocKeyPair(!!this.root.scalar))
-      : this.root
+    this.head = tweak
+      ? add(tweak, this.base, allocKeyPair(!!this.base.scalar))
+      : this.base
+  }
+
+  get isKeyChain () {
+    return true
   }
 
   get publicKey () {
-    return this.chain.publicKey
+    return this.head.publicKey
   }
 
-  createKeyPair (name) {
-    if (!name) return createSigner(this.chain)
+  get (name) {
+    if (!name) return createSigner(this.head)
 
-    const tweak = tweakKeyPair(toBuffer(name))
-    const keyPair = allocKeyPair(!!this.root.scalar)
+    const cur = this.tweak ? this.tweak.publicKey : EMPTY
+    const tweak = tweakKeyPair(toBuffer(name), cur)
+    const keyPair = allocKeyPair(!!this.base.scalar)
 
-    add(this.chain, tweak, keyPair)
-
+    add(this.base, tweak, keyPair)
     return createSigner(keyPair)
   }
 
-  push (name) {
-    const tweak = tweakKeyPair(toBuffer(name))
+  sub (name) {
+    const cur = this.tweak ? this.tweak.publicKey : EMPTY
+    const tweak = tweakKeyPair(toBuffer(name), cur)
+
     if (this.tweak) add(tweak, this.tweak, tweak)
-    return new Hyperkeys(this.root, tweak)
+    return new Keychain(this.home, this.base, tweak)
+  }
+
+  checkout (keyPair) {
+    return new Keychain(this.home, fromKeyPair(keyPair), null)
+  }
+
+  static from (k) {
+    return Keychain.isKeyChain(k) ? k : new Keychain(k)
+  }
+
+  static isKeyChain (k) {
+    return !!(k && k.isKeyChain)
+  }
+
+  static seed () {
+    const buf = b4a.alloc(32)
+    sodium.randombytes_buf(buf)
+    return buf
   }
 
   static keyPair (seed) {
@@ -49,7 +76,7 @@ class Hyperkeys {
   }
 }
 
-module.exports = Hyperkeys
+module.exports = Keychain
 
 function add (a, b, out) {
   sodium.experimental_crypto_tweak_ed25519_publickey_add(out.publicKey, a.publicKey, b.publicKey)
@@ -57,6 +84,11 @@ function add (a, b, out) {
     sodium.experimental_crypto_tweak_ed25519_secretkey_add(out.scalar, a.scalar, b.scalar)
   }
   return out
+}
+
+function fromKeyPair (keyPair) {
+  if (b4a.isBuffer(keyPair)) return { publicKey: keyPair, scalar: null }
+  return toScalarKeyPair(keyPair)
 }
 
 function allocKeyPair (signer) {
@@ -75,9 +107,11 @@ function toScalarKeyPair (keyPair) {
   return { publicKey: keyPair.publicKey, scalar }
 }
 
-function tweakKeyPair (name) {
+function tweakKeyPair (name, prev) {
   const keyPair = allocKeyPair(true)
-  sodium.experimental_crypto_tweak_ed25519(keyPair.scalar, keyPair.publicKey, name)
+  const seed = b4a.allocUnsafe(32)
+  sodium.crypto_generichash_batch(seed, [prev, name])
+  sodium.experimental_crypto_tweak_ed25519(keyPair.scalar, keyPair.publicKey, seed)
   return keyPair
 }
 
