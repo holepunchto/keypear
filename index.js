@@ -13,7 +13,7 @@ class Keychain {
       : this.base
   }
 
-  get isKeyChain () {
+  get isKeychain () {
     return true
   }
 
@@ -24,19 +24,16 @@ class Keychain {
   get (name) {
     if (!name) return createSigner(this.head)
 
-    const cur = this.tweak ? this.tweak.publicKey : EMPTY
-    const tweak = tweakKeyPair(toBuffer(name), cur)
     const keyPair = allocKeyPair(!!this.base.scalar)
+    add(this.base, this._getTweak(name), keyPair)
 
-    add(this.base, tweak, keyPair)
     return createSigner(keyPair)
   }
 
   sub (name) {
-    const cur = this.tweak ? this.tweak.publicKey : EMPTY
-    const tweak = tweakKeyPair(toBuffer(name), cur)
-
+    const tweak = this._getTweak(name)
     if (this.tweak) add(tweak, this.tweak, tweak)
+
     return new Keychain(this.home, this.base, tweak)
   }
 
@@ -44,12 +41,23 @@ class Keychain {
     return new Keychain(this.home, fromKeyPair(keyPair), null)
   }
 
-  static from (k) {
-    return Keychain.isKeyChain(k) ? k : new Keychain(k)
+  _getTweak (name) {
+    if (typeof name === 'string') name = b4a.from(name)
+    if (!b4a.isBuffer(name)) return name // keypair
+
+    const cur = this.tweak ? this.tweak.publicKey : EMPTY
+    return tweakKeyPair(toBuffer(name), cur)
   }
 
-  static isKeyChain (k) {
-    return !!(k && k.isKeyChain)
+  static from (k) {
+    if (Keychain.isKeychain(k)) { // future compat
+      return k instanceof Keychain ? k : new Keychain(k.home, k.base, k.tweak)
+    }
+    return new Keychain(k)
+  }
+
+  static isKeychain (k) {
+    return !!(k && k.isKeychain)
   }
 
   static seed () {
