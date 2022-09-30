@@ -1,4 +1,4 @@
-# keypair
+# keypear
 
 🔑🍐 Keychain that derives deterministic Ed25519 keypairs and attestations
 
@@ -14,10 +14,10 @@ const Keychain = require('keypear')
 const keys = new Keychain()
 
 const cur = keys.get() // returns the current keypair instance
-const foo = keys.get('foo') // tweaks and returns a keypair instancoe for 'foo'
+const foo = keys.get('foo') // tweaks and returns a keypair instance for 'foo'
 
 const sub = keys.sub('bar') // get a sub keychain tweaked by 'bar'
-const subsub = sub.sub('baz') // sub the the sub chain
+const subsub = sub.sub('baz') // sub on the sub chain
 
 // to sign things
 
@@ -43,7 +43,7 @@ Points to the keypair that was used to construct the Keychain.
 
 #### `keys.base`
 
-Points to current checkout, or home if not checkout was made.
+Points to current checkout, or home if no checkout was made.
 
 #### `keys.tweak`
 
