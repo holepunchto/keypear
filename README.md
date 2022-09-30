@@ -1,15 +1,15 @@
-# hyperkeys
+# keypair
 
-Keychain that derives deterministic Ed25519 keypairs for Hypercore
+🔑🍐. Keychain that derives deterministic Ed25519 keypairs and attestations
 
 ```
-npm install hyperkeys
+npm install keypear
 ```
 
 ## Usage
 
 ``` js
-const Keychain = require('hyperkeys')
+const Keychain = require('keypear')
 
 const keys = new Keychain()
 

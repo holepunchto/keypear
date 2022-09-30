@@ -1,7 +1,7 @@
 {
-  "name": "hyperkeys",
+  "name": "keypear",
   "version": "1.0.0",
-  "description": "Keychain that derives deterministic keypairs",
+  "description": "Keychain that derives deterministic Ed25519 keypairs and attestations",
   "main": "index.js",
   "scripts": {
     "test": "standard && brittle test/basic.js"
@@ -16,12 +16,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/holepunchto/hyperkeys.git"
+    "url": "https://github.com/holepunchto/keypear.git"
   },
   "author": "Mathias Buus (@mafintosh)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/holepunchto/hyperkeys/issues"
+    "url": "https://github.com/holepunchto/keypear/issues"
   },
-  "homepage": "https://github.com/holepunchto/hyperkeys"
+  "homepage": "https://github.com/holepunchto/keypear"
 }
