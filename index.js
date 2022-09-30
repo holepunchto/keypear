@@ -56,6 +56,10 @@ class Keychain {
     return new Keychain(k)
   }
 
+  static verify (signable, signature, publicKey) {
+    return sodium.crypto_sign_verify_detached(signature, signable, publicKey)
+  }
+
   static isKeychain (k) {
     return !!(k && k.isKeychain)
   }
