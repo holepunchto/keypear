@@ -125,6 +125,17 @@ const c = keys.checkout(somePublicKey)
 const h = c.checkout(c.home)
 ```
 
+## Bootstrapping helpers
+
+To easily setup deterministic keychains you can use the following methods to store the seed on disk
+for your keychain. Note that these might change / be removed as we iterate, and you should try and store
+your seed elsewhere if possible for maximum security, depending on what you are building.
+
+```js
+const keys = Keychain.openSync('./my-keychain') // sync
+const keys = await Keychain.open('./my-keychain') // async
+```
+
 ## License
 
 MIT
