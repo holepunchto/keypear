@@ -6,6 +6,9 @@
   "scripts": {
     "test": "standard && brittle test/basic.js"
   },
+  "browser": {
+    "./storage": "./no-storage.js"
+  },
   "dependencies": {
     "b4a": "^1.6.0",
     "sodium-native": "^3.4.1"

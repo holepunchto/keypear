@@ -1,3 +1,4 @@
+const storage = require('./storage')
 const sodium = require('sodium-native')
 const b4a = require('b4a')
 
@@ -49,11 +50,19 @@ class Keychain {
     return tweakKeyPair(toBuffer(name), cur)
   }
 
+  static async open (filename) {
+    return new this(this.keyPair(await storage.open(filename)))
+  }
+
+  static openSync (filename) {
+    return new this(this.keyPair(storage.openSync(filename)))
+  }
+
   static from (k) {
-    if (Keychain.isKeychain(k)) { // future compat
-      return k instanceof Keychain ? k : new Keychain(k.home, k.base, k.tweak)
+    if (this.isKeychain(k)) { // future compat
+      return k instanceof this ? k : new this(k.home, k.base, k.tweak)
     }
-    return new Keychain(k)
+    return new this(k)
   }
 
   static verify (signable, signature, publicKey) {
