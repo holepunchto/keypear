@@ -77,6 +77,18 @@ const k = keys.get('name') // tweak it with "name" first
 const k = keys.get(keyPair) // tweak it with this keypair first
 ```
 
+#### `keyPairInstance.sign(message)`
+
+Sign a message (if you own the key pair).
+
+#### `keyPairInstance.dh(otherPublicKey)`
+
+Perform a Diffie-Hellman against another keypair (if you own this key pair).
+
+#### `keyPairInstance.publicKey`
+
+Get the public key of this instance.
+
 #### `keychain = keys.sub(nameOrKeyPair)`
 
 Make a new sub Keychain, tweaked from a name or key pair.

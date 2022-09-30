@@ -132,8 +132,20 @@ function createSigner (kp) {
     return {
       publicKey: kp.publicKey,
       scalar: kp.scalar,
+      writable: true,
+      dh (publicKey) {
+        const output = b4a.alloc(sodium.crypto_scalarmult_ed25519_BYTES)
+
+        sodium.crypto_scalarmult_ed25519_noclamp(
+          output,
+          kp.scalar,
+          publicKey
+        )
+
+        return output
+      },
       sign (signable) {
-        const sig = b4a.alloc(64)
+        const sig = b4a.alloc(sodium.crypto_sign_BYTES)
         sodium.experimental_crypto_tweak_ed25519_sign_detached(sig, signable, kp.scalar)
         return sig
       },
@@ -144,6 +156,8 @@ function createSigner (kp) {
   return {
     publicKey: kp.publicKey,
     scalar: null,
+    writable: false,
+    dh: null,
     sign: null,
     verify
   }

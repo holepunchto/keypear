@@ -53,3 +53,16 @@ test('sub with tweak', function (t) {
 
   t.alike(sub1.publicKey, sub2.publicKey, 'same sub')
 })
+
+test('dh', function (t) {
+  const a = new Keychain()
+  const b = new Keychain()
+
+  const ak = a.get()
+  const bk = b.get()
+
+  const aSharedSecret = ak.dh(b.publicKey)
+  const bSharedSecret = bk.dh(a.publicKey)
+
+  t.alike(aSharedSecret, bSharedSecret)
+})
