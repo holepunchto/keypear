@@ -1,6 +1,6 @@
 # keypair
 
-🔑🍐. Keychain that derives deterministic Ed25519 keypairs and attestations
+🔑🍐 Keychain that derives deterministic Ed25519 keypairs and attestations
 
 ```
 npm install keypear
