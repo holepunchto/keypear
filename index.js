@@ -2,8 +2,6 @@ const storage = require('./storage')
 const sodium = require('sodium-native')
 const b4a = require('b4a')
 
-const EMPTY = b4a.alloc(32)
-
 class Keychain {
   constructor (home = Keychain.keyPair(), base = null, tweak = null) {
     this.home = toScalarKeyPair(fromKeyPair(home))
@@ -25,8 +23,9 @@ class Keychain {
   get (name) {
     if (!name) return createSigner(this.head)
 
-    const keyPair = allocKeyPair(!!this.base.scalar)
-    add(this.base, this._getTweak(name), keyPair)
+    const keyPair = allocKeyPair(!!this.head.scalar)
+
+    add(this.head, this._getTweak(name), keyPair)
 
     return createSigner(keyPair)
   }
@@ -46,8 +45,7 @@ class Keychain {
     if (typeof name === 'string') name = b4a.from(name)
     if (!b4a.isBuffer(name)) return name // keypair
 
-    const cur = this.tweak ? this.tweak.publicKey : EMPTY
-    return tweakKeyPair(toBuffer(name), cur)
+    return tweakKeyPair(toBuffer(name), this.head.publicKey)
   }
 
   static async open (filename) {

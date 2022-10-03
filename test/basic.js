@@ -66,3 +66,21 @@ test('dh', function (t) {
 
   t.alike(aSharedSecret, bSharedSecret)
 })
+
+test('local sub and remote checkout', function (t) {
+  const a = new Keychain()
+  const b = new Keychain()
+
+  const sub = a.sub('a-sub')
+
+  const k1 = sub.get()
+  const k2 = sub.get('1')
+
+  const checkout = b.checkout(k1.publicKey)
+
+  const k3 = checkout.get()
+  const k4 = checkout.get('1')
+
+  t.alike(k1.publicKey, k3.publicKey)
+  t.alike(k2.publicKey, k4.publicKey)
+})
