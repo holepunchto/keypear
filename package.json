@@ -1,6 +1,6 @@
 {
   "name": "keypear",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Keychain that derives deterministic Ed25519 keypairs and attestations",
   "main": "index.js",
   "scripts": {
