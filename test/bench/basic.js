@@ -66,7 +66,6 @@ test('benchmark keychain.sub() medium', async function (t) {
   benchmark(t, 100000, () => keys.sub())
   benchmark(t, 1000000, () => keys.sub())
   benchmark(t, 10000000, () => keys.sub())
-  benchmark(t, 100000000, () => keys.sub())
 })
 
 test('benchmark keychain.sub() all', async function (t) {
