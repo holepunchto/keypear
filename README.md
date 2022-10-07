@@ -59,7 +59,7 @@ Same as above, except it will return the Keychain if passed to it.
 Useful to avoid a peer dependency on the Keychain in your application, ie
 
 ```js
-const Keychain = require('hyperkeys')
+const Keychain = require('keypear')
 
 function myModule (keychain) {
   const keys = Keychain.from(keychain) // ensures the version of keys is the one you installed
