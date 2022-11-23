@@ -1,6 +1,51 @@
 const storage = require('./storage')
 const sodium = require('sodium-native')
+const c = require('compact-encoding')
 const b4a = require('b4a')
+
+const attestable = {
+  preencode (state, obj) {
+    c.fixed32.preencode(state, obj.base)
+    c.buffer.preencode(state, obj.metadata)
+  },
+  encode (state, obj) {
+    c.fixed32.encode(state, obj.base)
+    c.buffer.encode(state, obj.metadata)
+  },
+  decode (state) {
+    const base = c.fixed32.decode(state)
+    const metadata = c.buffer.decode(state)
+
+    return {
+      base,
+      metadata
+    }
+  }
+}
+
+const attest = {
+  preencode (state, obj) {
+    c.fixed32.preencode(state, obj.base)
+    c.buffer.preencode(state, obj.metadata)
+    c.fixed64.preencode(state, obj.signature)
+  },
+  encode (state, obj) {
+    c.fixed32.encode(state, obj.base)
+    c.buffer.encode(state, obj.metadata)
+    c.fixed64.encode(state, obj.signature)
+  },
+  decode (state) {
+    const base = c.fixed32.decode(state)
+    const metadata = c.buffer.decode(state)
+    const signature = c.fixed64.decode(state)
+
+    return {
+      base,
+      metadata,
+      signature
+    }
+  }
+}
 
 class Keychain {
   constructor (home = Keychain.keyPair(), base = null, tweak = null) {
@@ -46,6 +91,45 @@ class Keychain {
     if (!b4a.isBuffer(name)) return name // keypair
 
     return tweakKeyPair(toBuffer(name), this.head.publicKey)
+  }
+
+  static getAttestable ({ base, metadata }) {
+    if (base instanceof Keychain) {
+      return Keychain.getAttestable({ base: base.head.publicKey, metadata })
+    }
+    return c.encode(attestable, { base, metadata })
+  }
+
+  static bindAttestation (keyPair, metadata, signature, root) {
+    if (!keyPair.scalar) keyPair = toScalarKeyPair(keyPair)
+
+    const base = keyPair.publicKey
+    const attestable = Keychain.getAttestable({ base, metadata })
+
+    if (root && !sodium.crypto_sign_verify_detached(signature, attestable, root)) {
+      throw new Error('Attestation failed: signature verification failed.')
+    }
+
+    const attestation = c.encode(attest, { base, signature, metadata })
+    const tweak = tweakKeyPair(attestation)
+
+    return {
+      keyPair: add(keyPair, tweak, allocKeyPair(!!keyPair.scalar)),
+      attestation
+    }
+  }
+
+  static verifyAttestation (publicKey, attestedData, root) {
+    const { metadata, base, signature } = c.decode(attest, attestedData)
+    const signData = c.encode(attestable, { metadata, base })
+
+    const tweak = tweakKeyPair(attestedData)
+    const check = add({ publicKey: base }, tweak, allocKeyPair(false))
+
+    if (!Keychain.verify(signData, signature, root)) return false
+    if (!b4a.equals(check.publicKey, publicKey)) return false
+
+    return true
   }
 
   static async open (filename) {
@@ -126,7 +210,7 @@ function toScalarKeyPair (keyPair) {
   return { publicKey: keyPair.publicKey, scalar }
 }
 
-function tweakKeyPair (name, prev) {
+function tweakKeyPair (name, prev = b4a.alloc(0)) {
   const keyPair = allocKeyPair(true)
   const seed = b4a.allocUnsafe(32)
   sodium.crypto_generichash_batch(seed, [prev, name])

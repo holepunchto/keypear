@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "b4a": "^1.6.0",
+    "compact-encoding": "^2.11.0",
     "sodium-native": "^3.4.1"
   },
   "devDependencies": {
