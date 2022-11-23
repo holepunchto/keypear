@@ -210,7 +210,7 @@ function toScalarKeyPair (keyPair) {
   return { publicKey: keyPair.publicKey, scalar }
 }
 
-function tweakKeyPair (name, prev) {
+function tweakKeyPair (name, prev = b4a.alloc(0)) {
   const keyPair = allocKeyPair(true)
   const seed = b4a.allocUnsafe(32)
   sodium.crypto_generichash_batch(seed, [prev, name])
