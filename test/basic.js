@@ -1,4 +1,7 @@
 const test = require('brittle')
+const fs = require('fs')
+const path = require('path')
+const os = require('os')
 const b4a = require('b4a')
 const Keychain = require('../')
 
@@ -84,3 +87,23 @@ test('local sub and remote checkout', function (t) {
   t.alike(k1.publicKey, k3.publicKey)
   t.alike(k2.publicKey, k4.publicKey)
 })
+
+test('storage double open', async function (t) {
+  const dir = createTmpDir(t)
+  const filename = path.join(dir, 'primary-key')
+
+  const open1 = Keychain.open(filename)
+  const open2 = Keychain.open(filename)
+
+  const keys1 = await open1
+  const keys2 = await open2
+
+  t.alike(keys1.home.publicKey, keys2.home.publicKey)
+})
+
+function createTmpDir (t) {
+  const tmpdir = path.join(os.tmpdir(), 'localdrive-test-')
+  const dir = fs.mkdtempSync(tmpdir)
+  t.teardown(() => fs.promises.rm(dir, { recursive: true }))
+  return dir
+}
