@@ -138,4 +138,4 @@ const keys = await Keychain.open('./my-keychain') // async
 
 ## License
 
-MIT
+Apache-2.0
