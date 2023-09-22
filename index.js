@@ -98,9 +98,9 @@ class Keychain {
 module.exports = Keychain
 
 function add (a, b, out) {
-  sodium.experimental_crypto_tweak_ed25519_publickey_add(out.publicKey, a.publicKey, b.publicKey)
+  sodium.experimental_crypto_tweak_ed25519_pk_add(out.publicKey, a.publicKey, b.publicKey)
   if (a.scalar && b.scalar) {
-    sodium.experimental_crypto_tweak_ed25519_secretkey_add(out.scalar, a.scalar, b.scalar)
+    sodium.experimental_crypto_tweak_ed25519_scalar_add(out.scalar, a.scalar, b.scalar)
   }
   return out
 }
@@ -130,7 +130,7 @@ function tweakKeyPair (name, prev) {
   const keyPair = allocKeyPair(true)
   const seed = b4a.allocUnsafe(32)
   sodium.crypto_generichash_batch(seed, [prev, name])
-  sodium.experimental_crypto_tweak_ed25519(keyPair.scalar, keyPair.publicKey, seed)
+  sodium.experimental_crypto_tweak_ed25519_base(keyPair.scalar, keyPair.publicKey, seed)
   return keyPair
 }
 
