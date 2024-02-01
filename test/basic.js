@@ -1,86 +1,186 @@
 const test = require('brittle')
 const b4a = require('b4a')
-const Keychain = require('../')
+const KeyChain = require('../')
 
 test('basic', function (t) {
-  const keys = new Keychain()
+  const mnemonic = KeyChain.generateMnemonic()
+  const seed = KeyChain.generateSeed(mnemonic)
 
-  const signer = keys.get()
+  console.log(mnemonic)
+  console.log(seed)
 
-  t.ok(signer.publicKey)
-  t.ok(signer.sign)
+  const root = KeyChain.from({ mnemonic })
+
+  t.ok(root.publicKey)
 })
 
-test('deterministic', function (t) {
-  const keys = new Keychain(Keychain.keyPair(b4a.alloc(32)))
+// vectors taken from https://github.com/satoshilabs/slips/blob/master/slip-0010.md
+// note: the leading 0-bytes in public key vectors are omitted as libsodium public keys are 32 bytes
 
-  const signer = keys.get()
+test('slip10 vector', t => {
+  const seed = b4a.from('000102030405060708090a0b0c0d0e0f', 'hex')
+  const root = KeyChain.from({ seed })
 
-  t.snapshot(signer.publicKey, 'signer has same public key')
-  t.ok(signer.sign, 'signable')
+  const chainCode = b4a.from('90046a93de5380a72b5e45010748567d5ea02bbf6522f979e05c0d8d8ca9fffb', 'hex')
+  const privateKey = b4a.from('2b4be7f19ee27bbf30c667b642d5f4aa69fd169872f8fc3059c08ebae2eb19e7', 'hex')
+  const publicKey = b4a.from('a4b2856bfec510abab89753fac1ac0e1112364e7d250545963f135f2a33188ed', 'hex')
 
-  const publicKeys = new Keychain(keys.publicKey)
-  const verifier = publicKeys.get()
+  t.alike(root.chainCode, chainCode)
+  t.alike(root.chainKey, privateKey)
+  t.alike(root.publicKey, publicKey)
 
-  t.alike(verifier.publicKey, signer.publicKey, 'verifier has same public key')
-  t.not(verifier.sign, 'signable')
+  {
+    const path = [0]
+    // fingerprint: ddebc675
+
+    const chainCode = b4a.from('8b59aa11380b624e81507a27fedda59fea6d0b779a778918a2fd3590e16e9c69', 'hex')
+    const privateKey = b4a.from('68e0fe46dfb67e368c75379acec591dad19df3cde26e63b93a8e704f1dade7a3', 'hex')
+    const publicKey = b4a.from('8c8a13df77a28f3445213a0f432fde644acaa215fc72dcdf300d5efaa85d350c', 'hex')
+
+    const next = root.get(path)
+
+    t.alike(next.chainCode, chainCode)
+    t.alike(next.chainKey, privateKey)
+    t.alike(next.publicKey, publicKey)
+  }
+
+  {
+    const path = [0, 1]
+
+    const chainCode = b4a.from('a320425f77d1b5c2505a6b1b27382b37368ee640e3557c315416801243552f14', 'hex')
+    const privateKey = b4a.from('b1d0bad404bf35da785a64ca1ac54b2617211d2777696fbffaf208f746ae84f2', 'hex')
+    const publicKey = b4a.from('1932a5270f335bed617d5b935c80aedb1a35bd9fc1e31acafd5372c30f5c1187', 'hex')
+
+    const next = root.get(path)
+
+    t.alike(next.chainCode, chainCode)
+    t.alike(next.chainKey, privateKey)
+    t.alike(next.publicKey, publicKey)
+  }
+
+  {
+    const path = [0, 1, 2]
+
+    const chainCode = b4a.from('2e69929e00b5ab250f49c3fb1c12f252de4fed2c1db88387094a0f8c4c9ccd6c', 'hex')
+    const privateKey = b4a.from('92a5b23c0b8a99e37d07df3fb9966917f5d06e02ddbd909c7e184371463e9fc9', 'hex')
+    const publicKey = b4a.from('ae98736566d30ed0e9d2f4486a64bc95740d89c7db33f52121f8ea8f76ff0fc1', 'hex')
+
+    const next = root.get(path)
+
+    t.alike(next.chainCode, chainCode)
+    t.alike(next.chainKey, privateKey)
+    t.alike(next.publicKey, publicKey)
+  }
+
+  {
+    const path = [0, 1, 2, 2]
+
+    const chainCode = b4a.from('8f6d87f93d750e0efccda017d662a1b31a266e4a6f5993b15f5c1f07f74dd5cc', 'hex')
+    const privateKey = b4a.from('30d1dc7e5fc04c31219ab25a27ae00b50f6fd66622f6e9c913253d6511d1e662', 'hex')
+    const publicKey = b4a.from('8abae2d66361c879b900d204ad2cc4984fa2aa344dd7ddc46007329ac76c429c', 'hex')
+
+    const next = root.get(path)
+
+    t.alike(next.chainCode, chainCode)
+    t.alike(next.chainKey, privateKey)
+    t.alike(next.publicKey, publicKey)
+  }
+
+  {
+    const path = [0, 1, 2, 2, 1000000000]
+
+    const chainCode = b4a.from('68789923a0cac2cd5a29172a475fe9e0fb14cd6adb5ad98a3fa70333e7afa230', 'hex')
+    const privateKey = b4a.from('8f94d394a8e8fd6b1bc2f3f49f5c47e385281d5c17e65324b0f62483e37e8793', 'hex')
+    const publicKey = b4a.from('3c24da049451555d51a7014a37337aa4e12d41e485abccfa46b47dfb2af54b7a', 'hex')
+
+    const next = root.get(path)
+
+    t.alike(next.chainCode, chainCode)
+    t.alike(next.chainKey, privateKey)
+    t.alike(next.publicKey, publicKey)
+  }
 })
 
-test('deterministic subs', function (t) {
-  const keys = new Keychain(Keychain.keyPair(b4a.alloc(32)))
+test('slip10 vector 2', t => {
+  const seed = b4a.from('fffcf9f6f3f0edeae7e4e1dedbd8d5d2cfccc9c6c3c0bdbab7b4b1aeaba8a5a29f9c999693908d8a8784817e7b7875726f6c696663605d5a5754514e4b484542', 'hex')
 
-  const signer = keys.get('test')
+  const root = KeyChain.from({ seed })
 
-  t.snapshot(signer.publicKey, 'signer has same public key for test')
+  const chainCode = b4a.from('ef70a74db9c3a5af931b5fe73ed8e1a53464133654fd55e7a66f8570b8e33c3b', 'hex')
+  const privateKey = b4a.from('171cb88b1b3c1db25add599712e36245d75bc65a1a5c9e18d76f9f2b1eab4012', 'hex')
+  const publicKey = b4a.from('8fe9693f8fa62a4305a140b9764c5ee01e455963744fe18204b4fb948249308a', 'hex')
 
-  const publicKeys = new Keychain(keys.publicKey)
-  const verifier = publicKeys.get('test')
+  t.alike(root.chainCode, chainCode)
+  t.alike(root.chainKey, privateKey)
+  t.alike(root.publicKey, publicKey)
 
-  t.alike(verifier.publicKey, signer.publicKey, 'verifier has same public key')
-  t.not(verifier.sign, 'signable')
+  {
+    const path = [0]
 
-  const sub = publicKeys.sub('test')
-  const main = sub.get()
+    const chainCode = b4a.from('0b78a3226f915c082bf118f83618a618ab6dec793752624cbeb622acb562862d', 'hex')
+    const privateKey = b4a.from('1559eb2bbec5790b0c65d8693e4d0875b1747f4970ae8b650486ed7470845635', 'hex')
+    const publicKey = b4a.from('86fab68dcb57aa196c77c5f264f215a112c22a912c10d123b0d03c3c28ef1037', 'hex')
 
-  t.alike(main.publicKey, signer.publicKey, 'verifier has same public key')
-})
+    const next = root.get(path)
 
-test('sub with tweak', function (t) {
-  const keys = new Keychain()
+    t.alike(next.chainCode, chainCode)
+    t.alike(next.chainKey, privateKey)
+    t.alike(next.publicKey, publicKey)
+  }
 
-  const sub1 = keys.sub('foo').sub('bar')
-  const sub2 = keys.sub(sub1.tweak)
+  {
+    const path = [0, 2147483647]
 
-  t.alike(sub1.publicKey, sub2.publicKey, 'same sub')
-})
+    const chainCode = b4a.from('138f0b2551bcafeca6ff2aa88ba8ed0ed8de070841f0c4ef0165df8181eaad7f', 'hex')
+    const privateKey = b4a.from('ea4f5bfe8694d8bb74b7b59404632fd5968b774ed545e810de9c32a4fb4192f4', 'hex')
+    const publicKey = b4a.from('5ba3b9ac6e90e83effcd25ac4e58a1365a9e35a3d3ae5eb07b9e4d90bcf7506d', 'hex')
 
-test('dh', function (t) {
-  const a = new Keychain()
-  const b = new Keychain()
+    const next = root.get(path)
 
-  const ak = a.get()
-  const bk = b.get()
+    t.alike(next.chainCode, chainCode)
+    t.alike(next.chainKey, privateKey)
+    t.alike(next.publicKey, publicKey)
+  }
 
-  const aSharedSecret = ak.dh(b.publicKey)
-  const bSharedSecret = bk.dh(a.publicKey)
+  {
+    const path = [0, 2147483647, 1]
 
-  t.alike(aSharedSecret, bSharedSecret)
-})
+    const chainCode = b4a.from('73bd9fff1cfbde33a1b846c27085f711c0fe2d66fd32e139d3ebc28e5a4a6b90', 'hex')
+    const privateKey = b4a.from('3757c7577170179c7868353ada796c839135b3d30554bbb74a4b1e4a5a58505c', 'hex')
+    const publicKey = b4a.from('2e66aa57069c86cc18249aecf5cb5a9cebbfd6fadeab056254763874a9352b45', 'hex')
 
-test('local sub and remote checkout', function (t) {
-  const a = new Keychain()
-  const b = new Keychain()
+    const next = root.get(path)
 
-  const sub = a.sub('a-sub')
+    t.alike(next.chainCode, chainCode)
+    t.alike(next.chainKey, privateKey)
+    t.alike(next.publicKey, publicKey)
+  }
 
-  const k1 = sub.get()
-  const k2 = sub.get('1')
+  {
+    const path = [0, 2147483647, 1, 2147483646]
 
-  const checkout = b.checkout(k1.publicKey)
+    const chainCode = b4a.from('0902fe8a29f9140480a00ef244bd183e8a13288e4412d8389d140aac1794825a', 'hex')
+    const privateKey = b4a.from('5837736c89570de861ebc173b1086da4f505d4adb387c6a1b1342d5e4ac9ec72', 'hex')
+    const publicKey = b4a.from('e33c0f7d81d843c572275f287498e8d408654fdf0d1e065b84e2e6f157aab09b', 'hex')
 
-  const k3 = checkout.get()
-  const k4 = checkout.get('1')
+    const next = root.get(path)
 
-  t.alike(k1.publicKey, k3.publicKey)
-  t.alike(k2.publicKey, k4.publicKey)
+    t.alike(next.chainCode, chainCode)
+    t.alike(next.chainKey, privateKey)
+    t.alike(next.publicKey, publicKey)
+  }
+
+  {
+    const path = [0, 2147483647, 1, 2147483646, 2]
+
+    const chainCode = b4a.from('5d70af781f3a37b829f0d060924d5e960bdc02e85423494afc0b1a41bbe196d4', 'hex')
+    const privateKey = b4a.from('551d333177df541ad876a60ea71f00447931c0a9da16f227c11ea080d7391b8d', 'hex')
+    const publicKey = b4a.from('47150c75db263559a70d5778bf36abbab30fb061ad69f69ece61a72b0cfa4fc0', 'hex')
+
+    const next = root.get(path)
+
+    t.alike(next.chainCode, chainCode)
+    t.alike(next.chainKey, privateKey)
+    t.alike(next.publicKey, publicKey)
+  }
 })

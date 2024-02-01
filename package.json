@@ -11,6 +11,9 @@
   },
   "dependencies": {
     "b4a": "^1.6.0",
+    "bip39": "^3.1.0",
+    "compact-encoding": "^2.13.0",
+    "nanoassert": "^2.0.0",
     "sodium-native": "^4.0.3"
   },
   "devDependencies": {
